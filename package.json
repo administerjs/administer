@@ -1,0 +1,45 @@
+{
+  "name": "administer",
+  "version": "0.0.1",
+  "description": "A common-sense, minimalist DI/IoC framework.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --opts mocha.opts src/*.spec.js",
+    "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha -- --opts mocha.opts src/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/administerjs/administer.git"
+  },
+  "keywords": [
+    "di",
+    "dependency",
+    "dependencies",
+    "ioc",
+    "inversion",
+    "inject",
+    "injector",
+    "inversion",
+    "control"
+  ],
+  "author": "Josh David Miller <josh@joshdavidmiller.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/administerjs/administer/issues"
+  },
+  "homepage": "https://github.com/administerjs/administer#readme",
+  "babel": {
+    "stage": 0
+  },
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "chai": "^3.2.0",
+    "chai-as-promised": "^5.1.0",
+    "isparta": "^3.0.3",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.4"
+  },
+  "dependencies": {
+    "stampit": "^2.1.0"
+  }
+}
