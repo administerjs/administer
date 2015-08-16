@@ -2,10 +2,14 @@
   "name": "administer",
   "version": "0.0.1",
   "description": "A common-sense, minimalist DI/IoC framework.",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
     "test": "mocha --opts mocha.opts src/*.spec.js",
-    "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha -- --opts mocha.opts src/*.spec.js"
+    "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha -- --opts mocha.opts src/*.spec.js",
+    "build": ""
   },
   "repository": {
     "type": "git",
