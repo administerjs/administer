@@ -7,8 +7,8 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "mocha --opts mocha.opts src/*.spec.js",
-    "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/_mocha -- --opts mocha.opts src/*.spec.js",
+    "test": "babel-node ./node_modules/.bin/blue-tape src/*.spec.js | tap-spec",
+    "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/blue-tape -- src/*.spec.js",
     "build": ""
   },
   "repository": {
@@ -37,11 +37,10 @@
   },
   "devDependencies": {
     "babel": "^5.8.21",
-    "chai": "^3.2.0",
-    "chai-as-promised": "^5.1.0",
+    "blue-tape": "^0.1.10",
     "isparta": "^3.0.3",
-    "mocha": "^2.2.5",
-    "sinon": "^1.15.4"
+    "sinon": "^1.15.4",
+    "tap-spec": "^4.0.2"
   },
   "dependencies": {
     "stampit": "^2.1.0"
