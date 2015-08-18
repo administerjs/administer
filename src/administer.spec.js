@@ -51,7 +51,7 @@ test( 'adm.get() with a factory with no deps', t => {
 });
 
 test( 'adm.get() with a factory with 1-level deps', t => {
-  t.plan( 5 );
+  t.plan( 7 );
 
   let adm = new Administer();
   let promise = adm.get( B );
@@ -65,6 +65,9 @@ test( 'adm.get() with a factory with 1-level deps', t => {
     t.ok( b.isB, 'should resolve to an instance of the factory' );
     t.ok( b.A.isA, 'should pass injected components to the factory' );
     t.equal( b.O.displayName, 'O', 'should pass injected components to the factory' );
+
+    t.ok( b.$inject instanceof Array, 'should create an $inject property' );
+    t.equal( b.A, b.$inject[ 0 ], 'should put dependencies inside $inject' );
 
     return adm.get( B );
   })
@@ -220,6 +223,55 @@ test( 'adm.get() with recursive dependencies', t => {
   .then( r => { throw new Error( 'should have rejected the promise' ); } )
   .catch( e => {
     t.ok( e.toString().match( /recursive/ ), 'should reject the promise' );
+  });
+});
+
+test( 'adm.get() with an ES6 class', t => {
+  t.plan( 5 );
+
+  let adm = new Administer();
+  class Factory {
+    static get $inject () {
+      return [ A ];
+    }
+
+    constructor ( a ) {
+      this.isFactory = true;
+      this.a = a;
+    }
+  }
+  let promise = adm.get( Factory );
+
+  t.equal( typeof promise.then, 'function', 'should return a promise' );
+
+  return promise.then( f => {
+    t.ok( f.isFactory, 'should resolve with an instance from the factory' );
+    t.ok( f.a.isA, 'should pass dependencies as arguments to the constructor' );
+
+    t.ok( f.$inject instanceof Array, 'should create $inject on the prototype' );
+    t.equal( f.$inject[0], f.a, 'should put dependencies on this.$inject' );
+  });
+});
+
+test( 'adm.get() with a non-stamp factory', t => {
+  t.plan( 5 );
+
+  let adm = new Administer();
+  const Factory = function ( a ) {
+    this.isFactory = true;
+    this.a = a;
+  };
+  Factory.$inject = [ A ];
+  let promise = adm.get( Factory );
+
+  t.equal( typeof promise.then, 'function', 'should return a promise' );
+
+  return promise.then( f => {
+    t.ok( f.isFactory, 'should resolve with an instance from the factory' );
+    t.ok( f.a.isA, 'should pass dependencies as arguments' );
+
+    t.ok( f.$inject instanceof Array, 'should create $inject on the prototype' );
+    t.equal( f.$inject[0], f.a, 'should put dependencies on this.$inject' );
   });
 });
 

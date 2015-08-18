@@ -170,9 +170,10 @@ const Administer = stampit()
           }
 
           if ( stampit.isStamp( component ) ) {
-            instance = component( {}, ...deps );
+            instance = component.refs({ $inject: deps })( {}, ...deps );
           } else {
-            instance = component( ...deps );
+            component.prototype.$inject = deps;
+            instance = new component( ...deps );
           }
 
           // If the component takes longer than the specified timeout, reject the promise.
