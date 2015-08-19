@@ -1,9 +1,12 @@
 # Administer: Minimalist DI
 
+[![npm](https://img.shields.io/npm/v/npm.svg?style=flat)]() [![npm](https://img.shields.io/npm/l/npm.svg?style=flat)]() [![Code Climate](https://codeclimate.com/github/administerjs/administer/badges/gpa.svg)](https://codeclimate.com/github/administerjs/administer) [![Test Coverage](https://codeclimate.com/github/administerjs/administer/badges/coverage.svg)](https://codeclimate.com/github/administerjs/administer/coverage)
+
 Administer is a minimalist dependency injection framework for javascript projects that fully
 supports [stamps](https://github.com/stampit-org/stampit) (and ES6 classes and plain javascript
 functions). Check out the below [example](#example) to quickly see how it's used, and then read [the
 full API docs](docs/api.md).
+
 
 ## Yet Another DI Framework?
 
@@ -21,7 +24,13 @@ Specifically, Administer has the following design goals:
 
 ## Example
 
-Assuming we have components `A` and `B`:
+Just install `administer` via npm:
+
+```
+$ npm install --save administer
+```
+
+And you're good to go! Now let's write some code. Assuming we have components `A` and `B`:
 
 ```js
 // a.js
