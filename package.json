@@ -9,8 +9,11 @@
   "scripts": {
     "test": "babel-node ./node_modules/.bin/blue-tape src/*.spec.js | tap-spec",
     "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/blue-tape -- src/*.spec.js",
-    "build": ""
+    "build": "babel -d lib -e 0 src"
   },
+  "pre-commit": [
+    "test"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/administerjs/administer.git"
@@ -39,6 +42,7 @@
     "babel": "^5.8.21",
     "blue-tape": "^0.1.10",
     "isparta": "^3.0.3",
+    "pre-commit": "^1.1.1",
     "sinon": "^1.15.4",
     "tap-spec": "^4.0.2"
   },
