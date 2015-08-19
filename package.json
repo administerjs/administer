@@ -9,7 +9,8 @@
   "scripts": {
     "test": "babel-node ./node_modules/.bin/blue-tape src/*.spec.js | tap-spec",
     "test-cov": "babel-node node_modules/.bin/isparta cover --report text --report html node_modules/.bin/blue-tape -- src/*.spec.js",
-    "build": "babel -d lib -e 0 src"
+    "build": "babel -d lib -e 0 src",
+    "prepublish": "npm run build"
   },
   "pre-commit": [
     "test"
