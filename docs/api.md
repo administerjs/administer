@@ -29,6 +29,29 @@ let adm = Administer({ resolveTimeout: 2500 });
 export default adm;
 ```
 
+## Factory
+
+`Factory` is a helper method for generating stampit-based factories. It is a factory factory.
+
+- **displayName** *String*. The name used internally for this component.
+- **dependencies** *Array<Object|Function>*. The injectable dependencies of this component.
+
+This is just a simple helper. The following are equivalent:
+
+```js
+// manual
+const ComponentA = stampit()
+  .static({
+    displayName: 'ComponentA',
+    $inject: [ ComponentB ]
+  })
+  ;
+
+// with Factory
+import {Factory} from 'administer';
+const ComponentA = Factory( 'ComponentA', [ ComponentB ] );
+```
+
 # The Administer Object
 
 Once you have an instance of Administer, the following methods are available.
