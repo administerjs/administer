@@ -5,7 +5,7 @@ import sequencify from './sequencify';
  * The Default Configuration
  */
 const defaultConfiguration = {
-  resolveTimeout: 2500
+  resolveTimeout: 2500,
 };
 
 const Administer = stampit()
@@ -16,7 +16,7 @@ const Administer = stampit()
    *
    * Create a new WeakMap to house cached components after first instantiation.
    */
-  .init( ({ instance, args }) => {
+  .init( ({ instance }) => {
     instance._container = new WeakMap();
 
     /**
@@ -50,9 +50,9 @@ const Administer = stampit()
           // dependencies before we instantiate and cache the requested component.
           if ( typeof stamp === 'function' ) {
             // This is our record of what we need to instantiate.
-            let dependencyMap = new WeakMap();
+            const dependencyMap = new WeakMap();
 
-            let loadDeps = component => {
+            const loadDeps = component => {
               // If this component has already been mapped (e.g. it's depended on by two components
               // in the chain), we need do nothing further.
               if ( dependencyMap.has( component ) ) {
@@ -90,13 +90,13 @@ const Administer = stampit()
                 dependencyMap.get( component ).push( dep );
                 loadDeps( dep );
               });
-            }
+            };
 
             // Recursively scan injected dependencies, setting up a dependency tree.
             loadDeps( stamp );
 
             // Use sequencify to determine the order of execution here.
-            let { sequence, missingTasks, recursiveDependencies } = sequencify( dependencyMap, [ stamp ] );
+            const { sequence, /*missingTasks,*/ recursiveDependencies } = sequencify( dependencyMap, [ stamp ] );
 
             // Check for circular dependencies
             if ( recursiveDependencies.length ) {
@@ -141,7 +141,7 @@ const Administer = stampit()
     /**
      * An internal tool for getting a component's name.
      */
-    _componentName( component ) {
+    _componentName ( component ) {
       return component.displayName || 'UnnamedComponent';
     },
 
@@ -177,7 +177,7 @@ const Administer = stampit()
           }
 
           // If the component takes longer than the specified timeout, reject the promise.
-          let timeout = setTimeout( () => {
+          const timeout = setTimeout( () => {
             reject( new Error( `Component timed out: ${this._componentName( component )}` ) );
           }, this.resolveTimeout );
 
@@ -194,7 +194,7 @@ const Administer = stampit()
             // Resolve it.
             resolve( instance );
           })
-          .catch( err =>{
+          .catch( err => {
             clearTimeout( timeout );
             reject( err );
           });
@@ -224,7 +224,7 @@ const Administer = stampit()
      */
     clear () {
       this._container = new WeakMap();
-    }
+    },
   })
   ;
 

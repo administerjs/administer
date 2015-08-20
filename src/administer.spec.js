@@ -13,8 +13,8 @@ const C = stampit().static({ displayName: 'C', $inject: [ B ] }).refs({ isC: tru
   .init( ({ instance, args }) => {
     [ instance.B ] = args;
   });
-let P = stampit().init( () => Promise.resolve({ isP: true }) );
-let Q = stampit().static({ displayName: 'Q', $inject: [ P ] })
+const P = stampit().init( () => Promise.resolve({ isP: true }) );
+const Q = stampit().static({ displayName: 'Q', $inject: [ P ] })
   .init( ({ instance, args }) => {
     [ instance.P ] = args;
   });
@@ -24,7 +24,7 @@ test( 'Administer', t => {
   t.equal( typeof Administer, 'function', 'should be a function' );
 
   const config = { resolveTimeout: 100 };
-  let adm = new Administer( config );
+  const adm = new Administer( config );
 
   t.equal( adm.resolveTimeout, config.resolveTimeout, 'should merge props passed in' );
 });
@@ -32,8 +32,8 @@ test( 'Administer', t => {
 test( 'adm.get() with a factory with no deps', t => {
   t.plan( 3 );
 
-  let adm = Administer();
-  let promise = adm.get( A );
+  const adm = Administer();
+  const promise = adm.get( A );
   let a;
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
@@ -53,8 +53,8 @@ test( 'adm.get() with a factory with no deps', t => {
 test( 'adm.get() with a factory with 1-level deps', t => {
   t.plan( 7 );
 
-  let adm = Administer();
-  let promise = adm.get( B );
+  const adm = Administer();
+  const promise = adm.get( B );
   let b;
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
@@ -79,8 +79,8 @@ test( 'adm.get() with a factory with 1-level deps', t => {
 test( 'adm.get() with a factory with 2-level deps', t => {
   t.plan( 5 );
 
-  let adm = Administer();
-  let promise = adm.get( C );
+  const adm = Administer();
+  const promise = adm.get( C );
   let c;
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
@@ -102,24 +102,30 @@ test( 'adm.get() with a factory with 2-level deps', t => {
 test( 'adm.get() caching', t => {
   t.plan( 2 );
 
-  let adm = Administer();
-  
-  return adm.get( B ).then( b => {
-    return adm.get( A ).then( a => {
-      t.equal( b.A, a, 'should cache dependencies' );
+  const adm = Administer();
+  let a;
+  let b;
 
-      return adm.get( B.refs({ newB: true }) ).then( b2 => {
-        t.equal( b2.A, a, 'should get component deps from cache' );
-      });
-    });
+  return adm.get( B ).then( comp => {
+    b = comp;
+    return adm.get( A );
+  })
+  .then( comp => {
+    a = comp;
+    t.equal( b.A, a, 'should cache dependencies' );
+
+    return adm.get( B.refs({ newB: true }) );
+  })
+  .then( b2 => {
+    t.equal( b2.A, a, 'should get component deps from cache' );
   });
 });
 
 test( 'adm.get() with a promise factory', t => {
   t.plan( 3 );
 
-  let adm = Administer();
-  let promise = adm.get( P );
+  const adm = Administer();
+  const promise = adm.get( P );
   let p;
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
@@ -139,7 +145,7 @@ test( 'adm.get() with a promise factory', t => {
 test( 'adm.get() with a factory that has a promise factory as a dependency', t => {
   t.plan( 1 );
 
-  let adm = Administer();
+  const adm = Administer();
 
   return adm.get( Q )
   .then( q => {
@@ -150,12 +156,12 @@ test( 'adm.get() with a factory that has a promise factory as a dependency', t =
 test( 'adm.get() with a promise factory that rejects', t => {
   t.plan( 1 );
 
-  let err = new Error();
-  let Reject = stampit().init(() => Promise.reject( err ) );
-  let adm = Administer();
+  const err = new Error();
+  const Reject = stampit().init(() => Promise.reject( err ) );
+  const adm = Administer();
 
   return adm.get( Reject )
-  .then( r => { throw new Error( 'should have rejected the promise' ); } )
+  .then( () => t.notOk( true, 'should have rejected the promise' ) )
   .catch( e => {
     t.equal( e, err, 'should reject the promise' );
   });
@@ -164,18 +170,18 @@ test( 'adm.get() with a promise factory that rejects', t => {
 test( 'adm.get() with a promise that does not resolve before resolveTimeout', t => {
   t.plan( 1 );
 
-  let DelayedComponent = function () {
-    return new Promise( ( resolve, reject ) => setTimeout( () => resolve( true ), 20 ) );
+  const DelayedComponent = function () {
+    return new Promise( resolve => setTimeout( () => resolve( true ), 20 ) );
   };
-  let adm = new Administer({ resolveTimeout: 10 });
-  let clock = sinon.useFakeTimers();
+  const adm = new Administer({ resolveTimeout: 10 });
+  const clock = sinon.useFakeTimers();
 
   clock.tick( 15 );
-  let promise = adm.get( DelayedComponent );
+  const promise = adm.get( DelayedComponent );
   clock.restore();
 
   return promise
-  .then( r => { throw new Error( 'should have rejected the promise' ); } )
+  .then( () => t.notOk( true, 'should have rejected the promise' ) )
   .catch( e => {
     t.ok( e.toString().match( /timed out/ ), 'should reject the promise' );
   });
@@ -184,12 +190,11 @@ test( 'adm.get() with a promise that does not resolve before resolveTimeout', t 
 test( 'adm.get() with undefined dependencies', t => {
   t.plan( 1 );
 
-  let err = new Error();
-  let U = stampit().static({ $inject: [ undefined ] });
-  let adm = Administer();
+  const U = stampit().static({ $inject: [ undefined ] });
+  const adm = Administer();
 
   return adm.get( U )
-  .then( r => { throw new Error( 'should have rejected the promise' ); } )
+  .then( () => t.notOk( true, 'should have rejected the promise' ) )
   .catch( e => {
     t.ok( e.toString().match( /undefined/ ), 'should reject the promise' );
   });
@@ -198,11 +203,11 @@ test( 'adm.get() with undefined dependencies', t => {
 test( 'adm.get() with a factory with a non-array dependency', t => {
   t.plan( 2 );
 
-  let adm = Administer();
-  let NA = stampit().static({ $inject: A }).init(({instance, args}) => {
+  const adm = Administer();
+  const NA = stampit().static({ $inject: A }).init( ({ instance, args }) => {
     [ instance.A ] = args;
   });
-  let promise = adm.get( NA );
+  const promise = adm.get( NA );
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
 
@@ -214,13 +219,13 @@ test( 'adm.get() with a factory with a non-array dependency', t => {
 test( 'adm.get() with recursive dependencies', t => {
   t.plan( 1 );
 
-  let A = stampit().static({ displayName: 'A' });
-  let B = stampit().static({ displayName: 'B', $inject: [ A ] })
+  const A = stampit().static({ displayName: 'A' });
+  const B = stampit().static({ displayName: 'B', $inject: [ A ] });
   A.$inject = [ B ];
-  let adm = Administer();
+  const adm = Administer();
 
   return adm.get( A )
-  .then( r => { throw new Error( 'should have rejected the promise' ); } )
+  .then( () => t.notOk( true, 'should have rejected the promise' ) )
   .catch( e => {
     t.ok( e.toString().match( /recursive/ ), 'should reject the promise' );
   });
@@ -229,7 +234,7 @@ test( 'adm.get() with recursive dependencies', t => {
 test( 'adm.get() with an ES6 class', t => {
   t.plan( 5 );
 
-  let adm = Administer();
+  const adm = Administer();
   class Factory {
     static get $inject () {
       return [ A ];
@@ -240,7 +245,7 @@ test( 'adm.get() with an ES6 class', t => {
       this.a = a;
     }
   }
-  let promise = adm.get( Factory );
+  const promise = adm.get( Factory );
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
 
@@ -249,20 +254,20 @@ test( 'adm.get() with an ES6 class', t => {
     t.ok( f.a.isA, 'should pass dependencies as arguments to the constructor' );
 
     t.ok( f.$inject instanceof Array, 'should create $inject on the prototype' );
-    t.equal( f.$inject[0], f.a, 'should put dependencies on this.$inject' );
+    t.equal( f.$inject[ 0 ], f.a, 'should put dependencies on this.$inject' );
   });
 });
 
 test( 'adm.get() with a non-stamp factory', t => {
   t.plan( 5 );
 
-  let adm = Administer();
+  const adm = Administer();
   const Factory = function ( a ) {
     this.isFactory = true;
     this.a = a;
   };
   Factory.$inject = [ A ];
-  let promise = adm.get( Factory );
+  const promise = adm.get( Factory );
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
 
@@ -271,15 +276,15 @@ test( 'adm.get() with a non-stamp factory', t => {
     t.ok( f.a.isA, 'should pass dependencies as arguments' );
 
     t.ok( f.$inject instanceof Array, 'should create $inject on the prototype' );
-    t.equal( f.$inject[0], f.a, 'should put dependencies on this.$inject' );
+    t.equal( f.$inject[ 0 ], f.a, 'should put dependencies on this.$inject' );
   });
 });
 
 test( 'adm.get() with an object', t => {
   t.plan( 2 );
 
-  let adm = Administer();
-  let promise = adm.get( O );
+  const adm = Administer();
+  const promise = adm.get( O );
 
   t.equal( typeof promise.then, 'function', 'should return a promise' );
 
@@ -291,24 +296,25 @@ test( 'adm.get() with an object', t => {
 test( 'adm.provide() should pre-set an instance for a factory', t => {
   t.plan( 2 );
 
-  let adm = Administer();
-  let mockA = { isMockA: true };
+  const adm = Administer();
+  const mockA = { isMockA: true };
 
   adm.provide( A, mockA );
-  return adm.get( A ).then( a => {
+  return adm.get( A )
+  .then( a => {
     t.ok( a.isMockA, 'should resolve to the provided object' );
-
-    return adm.get( B ).then( b => {
-      t.ok( b.A.isMockA, 'should cache the provided object' );
-    });
+    return adm.get( B );
+  })
+  .then( b => {
+    t.ok( b.A.isMockA, 'should cache the provided object' );
   });
 });
 
 test( 'adm.provide() should pre-set an instance for use as a dependency', t => {
   t.plan( 1 );
 
-  let adm = Administer();
-  let mockA = { isMockA: true };
+  const adm = Administer();
+  const mockA = { isMockA: true };
 
   adm.provide( A, mockA );
   return adm.get( B ).then( b => {
@@ -319,8 +325,8 @@ test( 'adm.provide() should pre-set an instance for use as a dependency', t => {
 test( 'adm.clear() should remove any cached instances', t => {
   t.plan( 1 );
 
-  let adm = Administer();
-  let promise = adm.get( A );
+  const adm = Administer();
+  const promise = adm.get( A );
   let a;
 
   return promise.then( comp => {
