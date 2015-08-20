@@ -1,6 +1,6 @@
 import stampit from 'stampit';
 import test from 'blue-tape';
-import sinon from 'sinon';
+import lolex from 'lolex';
 import Administer from './administer';
 
 const A = stampit().static({ displayName: 'A' }).refs({ isA: true });
@@ -174,11 +174,11 @@ test( 'adm.get() with a promise that does not resolve before resolveTimeout', t 
     return new Promise( resolve => setTimeout( () => resolve( true ), 20 ) );
   };
   const adm = new Administer({ resolveTimeout: 10 });
-  const clock = sinon.useFakeTimers();
+  const clock = lolex.install();
 
   clock.tick( 15 );
   const promise = adm.get( DelayedComponent );
-  clock.restore();
+  clock.uninstall();
 
   return promise
   .then( () => t.notOk( true, 'should have rejected the promise' ) )
