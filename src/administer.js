@@ -39,100 +39,96 @@ const Administer = stampit()
      * `get` automatically instantiates uncached dependencies listed on the requested component's
      * `$inject` array property, recursively.
      */
-    get ( stamp ) {
+    get ( stamps ) {
+      let multipleComponents = false;
+
+      if ( Array.isArray( stamps ) ) {
+        multipleComponents = true;
+      } else {
+        stamps = [ stamps ];
+      }
+
       return new Promise( ( resolve, reject ) => {
         let promiseToReturn;
 
-        // If this component has not yet been resolved, we create a new instance.
-        if ( ! this._container.has( stamp ) ) {
+        // This is our record of what we need to instantiate.
+        const dependencyMap = new WeakMap();
 
-          // If the requested component is a factory, we need to resolve, instantiate, and cache its
-          // dependencies before we instantiate and cache the requested component.
-          if ( typeof stamp === 'function' ) {
-            // This is our record of what we need to instantiate.
-            const dependencyMap = new WeakMap();
-
-            const loadDeps = component => {
-              // If this component has already been mapped (e.g. it's depended on by two components
-              // in the chain), we need do nothing further.
-              if ( dependencyMap.has( component ) ) {
-                return;
-              }
-
-              // Add the component to our map.
-              dependencyMap.set( component, [] );
-
-              // If we already have an instance of this component, we need not map its dependencies
-              // because, by definition, they too have been cached.
-              if ( this._container.has( component ) ) {
-                return;
-              }
-
-              // If the component isn't a factory, there are no dependencies to process.
-              if ( typeof component !== 'function' ) {
-                return;
-              }
-
-              let deps = component.$inject;
-              if ( ! deps ) {
-                return;
-              } else if ( ! Array.isArray( deps ) ) {
-                deps = Object.getOwnPropertyNames( deps ).map( k => deps[ k ] );
-              }
-
-              // For each of this component's dependencies, add them to the map if we haven't seen them.
-              // Do this recursively.
-              deps.forEach( dep => {
-                // Ensure the dependency is not undefined
-                if ( dep === undefined ) {
-                  reject( new Error( `Undefined dependency for ${this._componentName( dep )}` ) );
-                }
-
-                dependencyMap.get( component ).push( dep );
-                loadDeps( dep );
-              });
-            };
-
-            // Recursively scan injected dependencies, setting up a dependency tree.
-            loadDeps( stamp );
-
-            // Use sequencify to determine the order of execution here.
-            const { sequence, /*missingTasks,*/ recursiveDependencies } = sequencify( dependencyMap, [ stamp ] );
-
-            // Check for circular dependencies
-            if ( recursiveDependencies.length ) {
-              const deps = recursiveDependencies.map( d => this._componentName( d ) ).join( ', ' );
-              reject( new Error( `Component has recursive dependencies: ${deps}` ) );
-            }
-
-            // Check for missing dependencies. This probably isn't even possible; it is included here only
-            // because sequencify was directly ported, which could have this state.
-            /* istanbul ignore if */
-            // if ( missingTasks.length ) {
-            //   const deps = missingTasks.map( d => this._componentName( d ) ).join( ', ' );
-            //   reject( new Error( `Missing dependencies: ${deps}` ) );
-            // }
-
-            // Component factories must be *completed* in order since they can be asynchronous, so we
-            // reduce the promises in sequence. We start with a dummy promise to keep the code clean.
-            promiseToReturn = sequence.reduce( ( promise, dep ) => {
-              return promise.then( () => this._instantiate( dep ) );
-            }, Promise.resolve( 1 ) )
-            ;
-
-          // Else, the requested component is not a factory, so we cache it as is and return a
-          // resolved promise with its value.
-          } else {
-            this._instantiate( stamp );
-
-            promiseToReturn = Promise.resolve( stamp );
+        const loadDeps = component => {
+          // If this component has already been mapped (e.g. it's depended on by two components
+          // in the chain), we need do nothing further.
+          if ( dependencyMap.has( component ) ) {
+            return;
           }
 
-        // Else, the component is already cached, so we just return a resolved promise with the cached
-        // value.
-        } else {
-          promiseToReturn = Promise.resolve( this._container.get( stamp ) );
+          // Add the component to our map.
+          dependencyMap.set( component, [] );
+
+          // If we already have an instance of this component, we need not map its dependencies
+          // because, by definition, they too have been cached.
+          if ( this._container.has( component ) ) {
+            return;
+          }
+
+          // If the component isn't a factory, there are no dependencies to process.
+          if ( typeof component !== 'function' ) {
+            return;
+          }
+
+          let deps = component.$inject;
+          if ( ! deps ) {
+            return;
+          } else if ( ! Array.isArray( deps ) ) {
+            deps = Object.getOwnPropertyNames( deps ).map( k => deps[ k ] );
+          }
+
+          // For each of this component's dependencies, add them to the map if we haven't seen them.
+          // Do this recursively.
+          deps.forEach( dep => {
+            // Ensure the dependency is not undefined
+            if ( dep === undefined ) {
+              reject( new Error( `Undefined dependency for ${this._componentName( dep )}` ) );
+            }
+
+            dependencyMap.get( component ).push( dep );
+            loadDeps( dep );
+          });
+        };
+
+        // Recursively scan injected dependencies, setting up a dependency tree.
+        stamps.forEach( stamp => loadDeps( stamp ) );
+
+        // Use sequencify to determine the order of execution here.
+        const { sequence, /*missingTasks,*/ recursiveDependencies } = sequencify( dependencyMap, stamps );
+
+        // Check for circular dependencies
+        if ( recursiveDependencies.length ) {
+          const deps = recursiveDependencies.map( d => this._componentName( d ) ).join( ', ' );
+          reject( new Error( `Component has recursive dependencies: ${deps}` ) );
         }
+
+        // Check for missing dependencies. This probably isn't even possible; it is included here only
+        // because sequencify was directly ported, which could have this state.
+        /* istanbul ignore if */
+        // if ( missingTasks.length ) {
+        //   const deps = missingTasks.map( d => this._componentName( d ) ).join( ', ' );
+        //   reject( new Error( `Missing dependencies: ${deps}` ) );
+        // }
+
+        // Component factories must be *completed* in order since they can be asynchronous, so we
+        // reduce the promises in sequence. We start with a dummy promise to keep the code clean.
+        promiseToReturn = sequence
+          .reduce( ( p, d ) => p.then( () => this._instantiate( d ) ), Promise.resolve( 1 ) )
+          .then( () => {
+            const promises = stamps.map( stamp => this._instantiate( stamp ) );
+
+            if ( ! multipleComponents ) {
+              return promises[ 0 ];
+            }
+
+            return Promise.all( promises );
+          })
+          ;
 
         // Boom.
         resolve( promiseToReturn );

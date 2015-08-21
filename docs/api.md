@@ -4,10 +4,11 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Administer API Documentation](#administer-api-documentation)
-  - [Administer( Object config ) : Administer](#administer-object-config---administer)
+- [Administer( Object config ) : Administer](#administer-object-config---administer)
+- [Factory](#factory)
 - [The Administer Object](#the-administer-object)
-  - [adm.get( Object|Function component ) : Promise](#admget-objectfunction-component---promise)
+  - [adm.get( Object|Function|Array component ) : Promise](#admget-objectfunctionarray-component---promise)
+    - [Arrays](#arrays)
     - [Errors](#errors)
   - [adm.provide( Object component, Object mock )](#admprovide-object-component-object-mock-)
   - [adm.clear()](#admclear)
@@ -52,16 +53,16 @@ import {Factory} from 'administer';
 const ComponentA = Factory( 'ComponentA', [ ComponentB ] );
 ```
 
-# The Administer Object
+## The Administer Object
 
 Once you have an instance of Administer, the following methods are available.
 
-## adm.get( Object|Function component ) : Promise
+### adm.get( Object|Function|Array component ) : Promise
 
 Returns a promise to resolve the requested component.
 
-- **component** *Object*|*Function*. An object or an object factory that we want Administer to
-  manage for us.
+- **component** *Object*|*Function*|*Array<Object|Function>*. An object or an object factory, or an
+  array thereof, that we want Administer to manage for us.
 
 If an object is provided, Administer will simply cache it and resolve the promise with the provided
 object.
@@ -123,7 +124,20 @@ adm.get( Database ).then( db => {
 });
 ```
 
-### Errors
+#### Arrays
+
+You can also provide an array of components or objects to `get()` and the promise will resolve to
+an array of components in the same order as requested:
+
+```js
+adm.get([ ComponentA, ComponentB, ComponentC ])
+.then( deps => {
+  const [ a, b, c ] = deps;
+  // ...
+})
+```
+
+#### Errors
 
 The promise returned by `get()` can reject for several reasons, including if an uncaught error is
 thrown by the factory. In addition, any factories that return promises that eventually reject will
@@ -144,7 +158,7 @@ integer value, for example:
 const adm = Administer({ resolveTimeout: 10 });
 ```
 
-## adm.provide( Object component, Object mock )
+### adm.provide( Object component, Object mock )
 
 Provide a mock object that will represent a component in all future requests.
 
@@ -175,7 +189,7 @@ adm.get( B ).then( b => {
 });
 ```
 
-## adm.clear()
+### adm.clear()
 
 Empties the entire cache.
 

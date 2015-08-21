@@ -324,6 +324,21 @@ test( 'adm.get() with an object', t => {
   });
 });
 
+test( 'adm.get() with an array of factories', t => {
+  t.plan( 4 );
+
+  return Administer().get([ A, B, O ])
+  .then( deps => {
+    t.ok( Array.isArray( deps ), 'should resolve to an array' );
+
+    const [ a, b, o ] = deps;
+
+    t.ok( a.isA, 'should resolve to an ordered array of components' );
+    t.ok( b.isB, 'should resolve to an ordered array of components' );
+    t.equal( o.displayName, 'O', 'should resolve to an ordered array of components' );
+  });
+});
+
 test( 'adm.provide() should pre-set an instance for a factory', t => {
   t.plan( 2 );
 
