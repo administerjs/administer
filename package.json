@@ -15,6 +15,7 @@
     "prepublish": "npm run build"
   },
   "pre-commit": [
+    "lint",
     "test"
   ],
   "repository": {
