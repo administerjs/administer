@@ -178,7 +178,7 @@ const Administer = stampit()
 
           if ( stampit.isStamp( component ) ) {
             instance = component.refs({ $inject: deps });
-            
+
             if ( Array.isArray( deps ) ) {
               instance = instance( {}, ...deps );
             } else {

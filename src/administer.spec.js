@@ -107,7 +107,7 @@ test( 'adm.get() with a stamp factory that has a map of dependencies', t => {
       a: A,
       o: O,
       p: P,
-    }
+    },
   })
   .init( ({ instance, args }) => {
     [ instance.deps ] = args;
