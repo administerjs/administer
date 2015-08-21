@@ -99,6 +99,53 @@ test( 'adm.get() with a factory with 2-level deps', t => {
   });
 });
 
+test( 'adm.get() with a stamp factory that has a map of dependencies', t => {
+  t.plan( 4 );
+
+  const M = stampit().static({
+    $inject: {
+      a: A,
+      o: O,
+      p: P,
+    }
+  })
+  .init( ({ instance, args }) => {
+    [ instance.deps ] = args;
+  });
+
+  const promise = Administer().get( M );
+
+  t.equal( typeof promise.then, 'function', 'should return a promise' );
+
+  return promise.then( m => {
+    t.ok( m.$inject.a.isA, 'should set the $inject property to a map of dependencies' );
+    t.ok( m.deps.a.isA, 'should set the $inject property to a map of dependencies' );
+    t.ok( m.a.isA, 'should set the dependencies as properties' );
+  });
+});
+
+test( 'adm.get() with a plain factory that has a map of dependencies', t => {
+  t.plan( 3 );
+
+  const M = function ( deps ) {
+    this.deps = deps;
+  };
+  M.$inject = {
+    a: A,
+    o: O,
+    p: P,
+  };
+
+  const promise = Administer().get( M );
+
+  t.equal( typeof promise.then, 'function', 'should return a promise' );
+
+  return promise.then( m => {
+    t.ok( m.$inject.a.isA, 'should set the $inject property to a map of dependencies' );
+    t.ok( m.deps.a.isA, 'should set the $inject property to a map of dependencies' );
+  });
+});
+
 test( 'adm.get() caching', t => {
   t.plan( 2 );
 
@@ -197,22 +244,6 @@ test( 'adm.get() with undefined dependencies', t => {
   .then( () => t.notOk( true, 'should have rejected the promise' ) )
   .catch( e => {
     t.ok( e.toString().match( /undefined/ ), 'should reject the promise' );
-  });
-});
-
-test( 'adm.get() with a factory with a non-array dependency', t => {
-  t.plan( 2 );
-
-  const adm = Administer();
-  const NA = stampit().static({ $inject: A }).init( ({ instance, args }) => {
-    [ instance.A ] = args;
-  });
-  const promise = adm.get( NA );
-
-  t.equal( typeof promise.then, 'function', 'should return a promise' );
-
-  return promise.then( na => {
-    t.ok( na.A.isA, 'should pass injected components to the factory' );
   });
 });
 

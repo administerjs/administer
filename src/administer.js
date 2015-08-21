@@ -73,15 +73,16 @@ const Administer = stampit()
                 return;
               }
 
-              if ( ! component.$inject ) {
+              let deps = component.$inject;
+              if ( ! deps ) {
                 return;
-              } else if ( ! Array.isArray( component.$inject ) ) {
-                component.$inject = [ component.$inject ];
+              } else if ( ! Array.isArray( deps ) ) {
+                deps = Object.getOwnPropertyNames( deps ).map( k => deps[ k ] );
               }
 
               // For each of this component's dependencies, add them to the map if we haven't seen them.
               // Do this recursively.
-              component.$inject.forEach( dep => {
+              deps.forEach( dep => {
                 // Ensure the dependency is not undefined
                 if ( dep === undefined ) {
                   reject( new Error( `Undefined dependency for ${this._componentName( dep )}` ) );
@@ -163,17 +164,34 @@ const Administer = stampit()
           let instance;
           let deps;
 
-          if ( component.$inject ) {
+          if ( Array.isArray( component.$inject ) ) {
             deps = component.$inject.map( key => this._container.get( key ) );
+          } else if ( typeof component.$inject === 'object' ) {
+            deps = Object.getOwnPropertyNames( component.$inject )
+              .reduce( ( deps, key ) => {
+                deps[ key ] = this._container.get( component.$inject[ key ] );
+                return deps;
+              }, {} );
           } else {
             deps = [];
           }
 
           if ( stampit.isStamp( component ) ) {
-            instance = component.refs({ $inject: deps })( {}, ...deps );
+            instance = component.refs({ $inject: deps });
+            
+            if ( Array.isArray( deps ) ) {
+              instance = instance( {}, ...deps );
+            } else {
+              instance = instance( deps, deps );
+            }
           } else {
             component.prototype.$inject = deps;
-            instance = new component( ...deps );
+
+            if ( Array.isArray( deps ) ) {
+              instance = new component( ...deps );
+            } else {
+              instance = new component( deps );
+            }
           }
 
           // If the component takes longer than the specified timeout, reject the promise.
